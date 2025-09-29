@@ -5,7 +5,6 @@
 import argparse
 import os
 from ftoolpy.auth import get_client
-from falconpy import FalconError
 
 def register_subcommand(subparsers):
     parser = subparsers.add_parser(
@@ -68,8 +67,6 @@ def tag_hosts(args):
                     print(f"Failed to {args.action} tag '{args.tag}' for host '{hostname}' (ID: {device_id}): {tag_response['body']}")
             else:
                 print(f"Host '{hostname}' not found.")
-        except FalconError as e:
-            print(f"Error processing host '{hostname}': {str(e)}")
         except Exception as e:
             print(f"Unexpected error for host '{hostname}': {str(e)}")
             continue
