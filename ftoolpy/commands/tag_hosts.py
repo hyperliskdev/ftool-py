@@ -67,10 +67,10 @@ def tag_hosts(args):
                 # Add or remove the tag
                 tag_response = falcon.command("UpdateDeviceTags", body=body)
 
-                if tag_response["status_code"] == 200:
+                if tag_response["body"]["code"] == 200:
                     print(f"Successfully {args.action}ed tag '{args.tag}' for host '{hostname}' (ID: {device_id})")
                 else:
-                    print(f"Failed to {args.action} tag '{args.tag}' for host '{hostname}' (ID: {device_id}): {tag_response['body']}")
+                    print(f"Failed to {args.action} tag '{args.tag}' for host '{hostname}' (ID: {device_id}): {tag_response}")
             else:
                 print(f"Host '{hostname}' not found.")
         except Exception as e:
