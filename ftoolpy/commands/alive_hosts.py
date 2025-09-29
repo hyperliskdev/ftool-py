@@ -33,34 +33,39 @@ def check_alive_hosts(args):
         return
 
     with open(args.input_file, 'r') as f:
-        host_ids = [line.strip() for line in f if line.strip()]
+        hostnames = [line.strip() for line in f if line.strip()]
 
-    if not host_ids:
-        print("No host IDs found in the input file.")
+    if not hostnames:
+        print("No hostnames found in the input file.")
         return
 
+
     results = []
-    for host_id in host_ids:
-        try:
-            response = falcon.query_devices_by_id(ids=[host_id])
-            if response["status_code"] == 200 and response["body"]["resources"]:
-                device_info = response["body"]["resources"][0]
-                status = device_info.get("status", "Unknown")
-                results.append((host_id, status))
-                print(f"Host ID: {host_id}, Status: {status}")
+    ## Use QueryDevicesByFilter to find host_ids based on hostnames
+    for hostname in hostnames:
+        response = falcon.query_devices_by_filter(filter=f"name:'{hostname}'")
+        if response["status_code"] == 200 and response["body"]["resources"]:
+            host_id = response["body"]["resources"][0]
+            device_details = falcon.get_device_details(ids=[host_id])
+            if device_details["status_code"] == 200 and device_details["body"]["resources"]:
+                device_info = device_details["body"]["resources"][0]
+                online_status = device_info.get("online", "Unknown")
+                results.append((hostname, host_id, online_status))
+                print(f"Host: {hostname}, ID: {host_id}, Online: {online_status}")
             else:
-                results.append((host_id, "Not Found"))
-                print(f"Host ID: {host_id}, Status: Not Found")
-        except Exception as e:
-            results.append((host_id, f"Error: {str(e)}"))
-            print(f"Host ID: {host_id}, Error: {str(e)}")
+                results.append((hostname, "N/A", "Error retrieving details"))
+                print(f"Host: {hostname}, ID: N/A, Error retrieving details")
+        else:
+            results.append((hostname, "N/A", "Not Found"))
+            print(f"Host: {hostname}, ID: N/A, Not Found")
+            continue
 
     # Write results to output file if specified
     if args.output_file:
         try:
             with open(args.output_file, 'w') as f:
-                for host_id, status in results:
-                    f.write(f"{host_id},{status}\n")
+                for hostname, host_id, online_status in results:
+                    f.write(f"{hostname},{host_id},{online_status}\n")
             print(f"Results saved to {args.output_file}")
         except Exception as e:
             print(f"Failed to write to output file {args.output_file}: {str(e)}")
