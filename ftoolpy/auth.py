@@ -1,4 +1,4 @@
-from falconpy import APIHarness
+from falconpy import APIHarnessV2
 import os
 
 def get_client():
@@ -8,4 +8,4 @@ def get_client():
     if not client_id or not client_secret:
         raise ValueError("Missing FALCON_CLIENT_ID or FALCON_CLIENT_SECRET in environment.")
 
-    return APIHarness(client_id=client_id, client_secret=client_secret)
+    return APIHarnessV2(client_id=client_id, client_secret=client_secret)
