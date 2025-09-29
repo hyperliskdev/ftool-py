@@ -1,0 +1,8 @@
+[project]
+name = "ftool-py"
+version = "0.1.0"
+description = "A CLI for Falcon APIs using falconpy"
+dependencies = ["crowdstrike-falconpy", "argparse"]
+
+[project.scripts]
+ftool = "ftoolpy.cli:main"
