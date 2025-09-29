@@ -1,5 +1,5 @@
 import argparse
-from ftoolpy.commands import alive_hosts  # Import your command modules here
+from ftoolpy.commands import alive_hosts, tag_hosts  # Import your command modules here
 
 def main():
     parser = argparse.ArgumentParser(prog="ftool-py", description="Falcon CLI powered by falconpy")
@@ -7,6 +7,7 @@ def main():
 
     # Register subcommands here
     alive_hosts.register_subcommand(subparsers)
+    tag_hosts.register_subcommand(subparsers)
 
     args = parser.parse_args()
 
