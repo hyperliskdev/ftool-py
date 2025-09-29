@@ -43,10 +43,10 @@ def check_alive_hosts(args):
     results = []
     ## Use QueryDevicesByFilter to find host_ids based on hostnames
     for hostname in hostnames:
-        response = falcon.command("QueryDevicesByFilter",filter=f"name:'{hostname}'")
+        response = falcon.command("QueryDevicesByFilter",filter=f"hostname:'{hostname}'")
         if response["status_code"] == 200 and response["body"]["resources"]:
             host_id = response["body"]["resources"][0]
-            device_details = falcon.get_device_details(ids=[host_id])
+            device_details = falcon.command("GetDeviceDetails", ids=[host_id])
             if device_details["status_code"] == 200 and device_details["body"]["resources"]:
                 device_info = device_details["body"]["resources"][0]
                 online_status = device_info.get("online", "Unknown")
