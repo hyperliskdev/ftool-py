@@ -46,6 +46,12 @@ def tag_hosts(args):
     if not hostnames:
         print("No hostnames found in the input file.")
         return
+    
+    # Ensure the tag begins with FalconGroupingTag/<tag>
+    if not args.tag.startswith("FalconGroupingTag/"):
+        args.tag = f"FalconGroupingTag/{args.tag}"
+    
+    print(f"Processing {len(hostnames)} hosts to {args.action} tag '{args.tag}'")
 
     for hostname in hostnames:
         try:
