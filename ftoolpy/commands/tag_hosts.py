@@ -48,8 +48,8 @@ def tag_hosts(args):
         return
     
     # Ensure the tag begins with FalconGroupingTag/<tag>
-    if not args.tag.startswith("FalconGroupingTag/"):
-        args.tag = f"FalconGroupingTag/{args.tag}"
+    if not args.tag.startswith("FalconGroupingTags/"):
+        args.tag = f"FalconGroupingTags/{args.tag}"
     
     print(f"Processing {len(hostnames)} hosts to {args.action} tag '{args.tag}'")
 
