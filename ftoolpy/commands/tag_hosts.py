@@ -55,7 +55,7 @@ def tag_hosts(args):
                 device_id = response["body"]["resources"][0]
                 body = {
                     "action": args.action,
-                    "ids": [device_id],
+                    "device_ids": [device_id],
                     "tags": [args.tag]
                 }
                 # Add or remove the tag
