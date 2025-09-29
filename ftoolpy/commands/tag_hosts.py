@@ -58,8 +58,7 @@ def tag_hosts(args):
         try:
             # Query device by hostname to get the device ID
             response = falcon.command("QueryDevicesByFilter", filter=f"hostname:'{hostname}'")
-            logging.debug(f"QueryDevicesByFilter response for '{hostname}': {response}")
-            if response["status_code"] == 200 and response["body"]["resources"]:
+            if response["status_code"] == 202 and response["body"]["resources"]:
                 device_id = response["body"]["resources"][0]
                 body = {
                     "action": args.action,
@@ -68,9 +67,8 @@ def tag_hosts(args):
                 }
                 # Add or remove the tag
                 tag_response = falcon.command("UpdateDeviceTags", body=body)
-                logging.debug(f"UpdateDeviceTags response for '{hostname}': {tag_response}")
 
-                if tag_response["status_code"] == 200:
+                if tag_response["status_code"] == 202:
                     print(f"Successfully {args.action}ed tag '{args.tag}' for host '{hostname}' (ID: {device_id})")
                 else:
                     print(f"Failed to {args.action} tag '{args.tag}' for host '{hostname}' (ID: {device_id}): {tag_response}")
