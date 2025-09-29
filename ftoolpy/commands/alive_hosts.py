@@ -46,10 +46,10 @@ def check_alive_hosts(args):
         response = falcon.command("QueryDevicesByFilter",filter=f"hostname:'{hostname}'")
         if response["status_code"] == 200 and response["body"]["resources"]:
             host_id = response["body"]["resources"][0]
-            device_details = falcon.command("GetDeviceDetails", ids=[host_id])
+            device_details = falcon.command("GetOnlineState_V1", ids=[host_id])
             if device_details["status_code"] == 200 and device_details["body"]["resources"]:
                 device_info = device_details["body"]["resources"][0]
-                online_status = device_info.get("online", "Unknown")
+                online_status = device_info.get("state", "Unknown")
                 results.append((hostname, host_id, online_status))
                 print(f"Host: {hostname}, ID: {host_id}, Online: {online_status}")
             else:
