@@ -2,7 +2,7 @@ import argparse
 from ftoolpy.commands import alive_hosts, tag_hosts  # Import your command modules here
 
 def main():
-    parser = argparse.ArgumentParser(prog="ftool-py", description="Falcon CLI powered by falconpy")
+    parser = argparse.ArgumentParser(prog="ftool", description="Falcon CLI powered by falconpy")
     subparsers = parser.add_subparsers(title="commands", description="Available commands")
 
     # Register subcommands here

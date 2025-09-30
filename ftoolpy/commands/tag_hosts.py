@@ -71,9 +71,9 @@ def tag_hosts(args):
                 logging.debug(f"UpdateDeviceTags response for '{hostname}': {tag_response}")
 
                 if tag_response["status_code"] == 202:
-                    print(f"Successfully {args.action}ed tag '{args.tag}' for host '{hostname}' (ID: {device_id})")
+                    print(f"Success! {args.action} tag '{args.tag}' to host '{hostname}' (ID: {device_id})")
                 else:
-                    print(f"Failed to {args.action} tag '{args.tag}' for host '{hostname}' (ID: {device_id}): {tag_response}")
+                    print(f"Failure! {args.action} tag '{args.tag}' host '{hostname}' (ID: {device_id}): {tag_response}")
             else:
                 print(f"Host '{hostname}' not found.")
         except Exception as e:
