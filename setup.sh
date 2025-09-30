@@ -1,4 +1,4 @@
 #!/bin/bash
 set -a
-pipx install -e .
+pipx install -e . --force
 source .env
