@@ -3,7 +3,6 @@ import os
 import argparse
 from ftoolpy.auth import get_client
 
-
 def register_subcommand(subparsers):
     parser = subparsers.add_parser(
         "alive-hosts",
@@ -21,7 +20,6 @@ def register_subcommand(subparsers):
         help="Path to the output file to save results (optional)"
     )
     parser.set_defaults(func=check_alive_hosts)
-
 
 def check_alive_hosts(args):
     # Initialize Falcon instance
