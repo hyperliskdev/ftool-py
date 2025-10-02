@@ -9,7 +9,8 @@ Make a copy of `.env.example` named `.env`
 
 Place your CrowdStrike API keys in .env
 
-To use the program first, use the setup.sh.
+Use `pipx install -e . --force` to install the program globally
 
 Then run the program with `ftool`, it should be available globally.
 
+Make sure to run the program in the same directory as the `.env`
