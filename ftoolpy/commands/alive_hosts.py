@@ -54,21 +54,20 @@ def check_alive_hosts(args):
         device_details = falcon.command("PostDeviceDetailsV2", ids=host_ids)
 
         # Check if the device details response is valid
-        if device_details["status_code"] == 200 and host_ids:
+        if device_details["status_code"] == 200 and device_details["body"]["resources"]:
 
-            # Create a mapping of device_id to its details
-            device_info_map = {item["device_id"]: item for item in device_details["body"]["resources"]}
-            for hostname in hostnames:
-                host_id = host_id_map.get(hostname, "N/A")
-                if host_id != "N/A":
-                    device_info = device_info_map.get(host_id, {})
-                    first_seen = device_info.get("first_seen", "Unknown")
-                    last_seen = device_info.get("last_seen", "Unknown")
-                    results.append((hostname, host_id, first_seen, last_seen))
-                    print(f"Host: {hostname}, ID: {host_id}, First Seen: {first_seen}, Last Seen: {last_seen}")
-                else:
-                    results.append((hostname, "N/A", "Not Found"))
-                    print(f"Host: {hostname}, ID: N/A, Not Found")
+            device_details = device_details["body"]["resources"]
+
+            # Check each device details and determine online status
+            for device in device_details:
+                hostname = device.get("hostname", "Unknown")
+                host_id = device.get("device_id", "Unknown")
+                last_seen = device.get("last_seen", None)
+                first_seen = device.get("first_seen", None)
+                results.append((hostname, host_id, last_seen, first_seen))
+                print(f"Hostname: {hostname}, ID: {host_id}, Last Seen: {last_seen}, First Seen: {first_seen}")
+
+                       
         else:
             print(f"Error retrieving device details: {response}")
 
@@ -76,8 +75,8 @@ def check_alive_hosts(args):
     if args.output_file:
         try:
             with open(args.output_file, 'w') as f:
-                for hostname, host_id, online_status in results:
-                    f.write(f"{hostname},{host_id},{online_status}\n")
+                for hostname, host_id, last_seen, first_seen in results:
+                    f.write(f"{hostname},{host_id},{last_seen},{first_seen}\n")
             print(f"Results saved to {args.output_file}")
         except Exception as e:
             print(f"Failed to write to output file {args.output_file}: {str(e)}")
