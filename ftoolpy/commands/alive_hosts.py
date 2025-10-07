@@ -48,12 +48,13 @@ def check_alive_hosts(args):
     if response["status_code"] == 200 and response["body"]["resources"]:
 
         # Create a mapping of hostname to device_id
-        host_id_map = {item["hostname"]: item["device_id"] for item in response["body"]["resources"]}
-        device_ids = list(host_id_map.values())
-        device_details = falcon.command("PostDeviceDetailsV2", ids=device_ids)
+        # host_id_map = {item["hostname"]: item["device_id"] for item in response["body"]["resources"]}
+        host_ids = response["body"]["resources"]
+
+        device_details = falcon.command("PostDeviceDetailsV2", ids=host_ids)
 
         # Check if the device details response is valid
-        if device_details["status_code"] == 200 and device_details["body"]["resources"]:
+        if device_details["status_code"] == 200 and host_ids:
 
             # Create a mapping of device_id to its details
             device_info_map = {item["device_id"]: item for item in device_details["body"]["resources"]}
