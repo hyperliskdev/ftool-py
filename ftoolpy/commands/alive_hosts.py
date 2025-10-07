@@ -40,23 +40,36 @@ def check_alive_hosts(args):
 
     results = []
     ## Use QueryDevicesByFilter to find host_ids based on hostnames
-    for hostname in hostnames:
-        response = falcon.command("QueryDevicesByFilter",filter=f"hostname:'{hostname}'")
-        if response["status_code"] == 200 and response["body"]["resources"]:
-            host_id = response["body"]["resources"][0]
-            device_details = falcon.command("GetOnlineState_V1", ids=[host_id])
-            if device_details["status_code"] == 200 and device_details["body"]["resources"]:
-                device_info = device_details["body"]["resources"][0]
-                online_status = device_info.get("state", "Unknown")
-                results.append((hostname, host_id, online_status))
-                print(f"Host: {hostname}, ID: {host_id}, Online: {online_status}")
-            else:
-                results.append((hostname, "N/A", "Error retrieving details"))
-                print(f"Host: {hostname}, ID: N/A, Error retrieving details")
+
+    # Map hostnames to IDs and check their online status
+    response = falcon.command("QueryDevicesByFilter", filter="hostname:(" + " OR ".join([f"'{hostname}'" for hostname in hostnames]) + ")")
+
+    # Check if the response is valid and contains resources
+    if response["status_code"] == 200 and response["body"]["resources"]:
+
+        # Create a mapping of hostname to device_id
+        host_id_map = {item["hostname"]: item["device_id"] for item in response["body"]["resources"]}
+        device_ids = list(host_id_map.values())
+        device_details = falcon.command("PostDeviceDetailsV2", ids=device_ids)
+
+        # Check if the device details response is valid
+        if device_details["status_code"] == 200 and device_details["body"]["resources"]:
+
+            # Create a mapping of device_id to its details
+            device_info_map = {item["device_id"]: item for item in device_details["body"]["resources"]}
+            for hostname in hostnames:
+                host_id = host_id_map.get(hostname, "N/A")
+                if host_id != "N/A":
+                    device_info = device_info_map.get(host_id, {})
+                    first_seen = device_info.get("first_seen", "Unknown")
+                    last_seen = device_info.get("last_seen", "Unknown")
+                    results.append((hostname, host_id, first_seen, last_seen))
+                    print(f"Host: {hostname}, ID: {host_id}, First Seen: {first_seen}, Last Seen: {last_seen}")
+                else:
+                    results.append((hostname, "N/A", "Not Found"))
+                    print(f"Host: {hostname}, ID: N/A, Not Found")
         else:
-            results.append((hostname, "N/A", "Not Found"))
-            print(f"Host: {hostname}, ID: N/A, Not Found")
-            continue
+            print("Error retrieving device details.")
 
     # Write results to output file if specified
     if args.output_file:
