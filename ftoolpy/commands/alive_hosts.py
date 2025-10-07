@@ -42,7 +42,7 @@ def check_alive_hosts(args):
     ## Use QueryDevicesByFilter to find host_ids based on hostnames
 
     # Map hostnames to IDs and check their online status
-    response = falcon.command("QueryDevicesByFilter", filter=f"hostname:['" + "','".join(hostnames) + "']")
+    response = falcon.command("QueryDevicesByFilter", filter=f"hostname:['" + "','".join(hostnames) + "']", limit=5000)
 
     # Check if the response is valid and contains resources
     if response["status_code"] == 200 and response["body"]["resources"]:
