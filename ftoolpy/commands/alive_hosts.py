@@ -19,6 +19,11 @@ def register_subcommand(subparsers):
         required=False,
         help="Path to the output file to save results (optional)"
     )
+    parser.add_argument(
+        "-d", "--dead",
+        required=False,
+        help="Show only hosts that are offline"
+    )
     parser.set_defaults(func=check_alive_hosts)
 
 def check_alive_hosts(args):
@@ -65,12 +70,20 @@ def check_alive_hosts(args):
                 last_seen = device.get("last_seen", None)
                 first_seen = device.get("first_seen", None)
                 results.append((hostname, host_id, last_seen, first_seen))
-                print(f"Hostname: {hostname}, ID: {host_id}, Last Seen: {last_seen}, First Seen: {first_seen}")
-
                        
         else:
             print(f"Error retrieving device details: {response}")
+            
+    #Filter for hosts that aren't in results
+    if args.dead:
+        alive_hostnames = {result[0] for result in results}
+        dead_hostnames = set(hostnames) - alive_hostnames
+        results = [(hostname, "N/A", "N/A", "N/A") for hostname in dead_hostnames]
 
+    for res in results:
+        print(f"Hostname: {res[0]}, ID: {res[1]}, Last Seen: {res[2]}, First Seen: {res[3]}")
+        
+    
     # Write results to output file if specified
     if args.output_file:
         try:
