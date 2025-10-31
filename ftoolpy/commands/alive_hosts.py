@@ -22,6 +22,7 @@ def register_subcommand(subparsers):
     parser.add_argument(
         "-d", "--dead",
         required=False,
+        action='store_true',
         help="Show only hosts that are offline"
     )
     parser.set_defaults(func=check_alive_hosts)
