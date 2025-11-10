@@ -45,6 +45,7 @@ def check_alive_hosts(args):
 
 
     results = []
+    hidden_results = []
     ## Use QueryDevicesByFilter to find host_ids based on hostnames
 
     # Map hostnames to IDs and check their online status
@@ -65,7 +66,8 @@ def check_alive_hosts(args):
                 hostname = hidden_device.get("hostname", "Unknown")
                 host_id = hidden_device.get("device_id", "Unknown")
                 hidden = "Device is hidden in Falcon Console"
-                results.append((hostname, host_id, hidden))
+                hidden_results.append((hostname, host_id, hidden))
+                
         else:
             print(f"Error retrieving hidden device details: {hidden_device_details}")
 
@@ -92,9 +94,12 @@ def check_alive_hosts(args):
         alive_hostnames = {result[0] for result in results}
         dead_hostnames = set(hostnames) - alive_hostnames
         results = [(hostname, "N/A", "N/A", "N/A") for hostname in dead_hostnames]
+        
 
     for res in results:
         print(f"Hostname: {res[0]}, ID: {res[1]}, Last Seen: {res[2]}, First Seen: {res[3]}")
+    for hidden_res in hidden_results:
+        print(f"Hostname: {hidden_res[0]}, ID: {hidden_res[1]}, Status: {hidden_res[2]}")
         
     
     # Write results to output file if specified
@@ -103,6 +108,8 @@ def check_alive_hosts(args):
             with open(args.output_file, 'w') as f:
                 for hostname, host_id, last_seen, first_seen in results:
                     f.write(f"{hostname},{host_id},{last_seen},{first_seen}\n")
+                for hostname, host_id, hidden in hidden_results:
+                    f.write(f"{hostname},{host_id},{hidden}\n")
             print(f"Results saved to {args.output_file}")
         except Exception as e:
             print(f"Failed to write to output file {args.output_file}: {str(e)}")
