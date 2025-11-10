@@ -49,15 +49,21 @@ def check_alive_hosts(args):
 
     # Map hostnames to IDs and check their online status
     response = falcon.command("QueryDevicesByFilter", filter=f"hostname:['" + "','".join(hostnames) + "']", limit=5000)
-
+    hidden_devices = falcon.command("QueryHiddenDevices", filter=f"hostname:['" + "','".join(hostnames) + "']", limit=5000)
+    
     # Check if the response is valid and contains resources
-    if response["status_code"] == 200 and response["body"]["resources"]:
+    if response["status_code"] == 200 and response["body"]["resources"] and hidden_devices["status_code"] == 200 and response["body"]["resources"]:
+        
+        # Check the hidden devices response
+        hidden_host_ids = hidden_devices["body"]["resources"]
 
         # Create a mapping of hostname to device_id
         # host_id_map = {item["hostname"]: item["device_id"] for item in response["body"]["resources"]}
         host_ids = response["body"]["resources"]
+        
+        all_ids = hidden_host_ids + host_ids
 
-        device_details = falcon.command("PostDeviceDetailsV2", ids=host_ids)
+        device_details = falcon.command("PostDeviceDetailsV2", ids=all_ids)
 
         # Check if the device details response is valid
         if device_details["status_code"] == 200 and device_details["body"]["resources"]:
@@ -71,7 +77,6 @@ def check_alive_hosts(args):
                 last_seen = device.get("last_seen", None)
                 first_seen = device.get("first_seen", None)
                 results.append((hostname, host_id, last_seen, first_seen))
-                       
         else:
             print(f"Error retrieving device details: {response}")
             
