@@ -60,7 +60,7 @@ def check_alive_hosts(args):
         
         hidden_device_details = falcon.command("PostDeviceDetailsV2", ids=hidden_host_ids)
         
-        if hidden_device_details["status_code"] == 200 and hidden_device_details["body"]["resources"]
+        if hidden_device_details["status_code"] == 200 and hidden_device_details["body"]["resources"]:
             hidden_details = hidden_device_details["body"]["resource"]
             
             for hidden_device in hidden_details:
