@@ -1,8 +1,9 @@
 ## Tag hosts with a specified tag using FalconPy
 
-# Take a list of hostnames and add or remove a tag from each host.
+# Take a list of hostnames or IP addresses and add or remove a tag from each host.
 
 import argparse
+import ipaddress
 import logging
 import os
 from ftoolpy.auth import get_client
@@ -16,7 +17,7 @@ def register_subcommand(subparsers):
     parser.add_argument(
         "-i", "--input-file",
         required=True,
-        help="Path to the input file containing hostnames (one per line)"
+        help="Path to the input file containing hostnames, IPv4 or IPv6 addresses (one per line)"
     )
     parser.add_argument(
         "-t", "--tag",
@@ -32,11 +33,19 @@ def register_subcommand(subparsers):
     )
     parser.set_defaults(func=tag_hosts)
 
+def is_ip_address(value):
+    """Check if a string is a valid IPv4 or IPv6 address."""
+    try:
+        ipaddress.ip_address(value)
+        return True
+    except ValueError:
+        return False
+
 def tag_hosts(args):
     # Initialize Falcon instance
     falcon = get_client()
 
-    # Read hostnames from input file
+    # Read hostnames/IP addresses from input file
     if not os.path.isfile(args.input_file):
         print(f"Input file {args.input_file} does not exist.")
         return
@@ -45,7 +54,7 @@ def tag_hosts(args):
         hostnames = [line.strip() for line in f if line.strip()]
 
     if not hostnames:
-        print("No hostnames found in the input file.")
+        print("No hostnames or IP addresses found in the input file.")
         return
     
     # Ensure the tag begins with FalconGroupingTag/<tag>
@@ -56,9 +65,19 @@ def tag_hosts(args):
 
     for hostname in hostnames:
         try:
-            # Query device by hostname to get the device ID
-            response = falcon.command("QueryDevicesByFilter", filter=f"hostname:'{hostname}'")
+            # Determine if the input is an IP address or hostname
+            if is_ip_address(hostname):
+                # Query device by IP address
+                filter_query = f"local_ip:'{hostname}'"
+                identifier_type = "IP address"
+            else:
+                # Query device by hostname
+                filter_query = f"hostname:'{hostname}'"
+                identifier_type = "hostname"
+
+            response = falcon.command("QueryDevicesByFilter", filter=filter_query)
             logging.debug(f"QueryDevicesByFilter response for '{hostname}': {response}")
+
             if response["status_code"] == 200 and response["body"]["resources"]:
                 device_id = response["body"]["resources"][0]
                 body = {
@@ -71,16 +90,17 @@ def tag_hosts(args):
                 logging.debug(f"UpdateDeviceTags response for '{hostname}': {tag_response}")
 
                 if tag_response["status_code"] == 202:
-                    print(f"Success! {args.action} tag '{args.tag}' to host '{hostname}' (ID: {device_id})")
+                    print(f"Success! {args.action} tag '{args.tag}' to {identifier_type} '{hostname}' (ID: {device_id})")
                 else:
-                    print(f"Failure! {args.action} tag '{args.tag}' host '{hostname}' (ID: {device_id}): {tag_response}")
+                    print(f"Failure! {args.action} tag '{args.tag}' {identifier_type} '{hostname}' (ID: {device_id}): {tag_response}")
             else:
-                print(f"Host '{hostname}' not found.")
+                print(f"{identifier_type.capitalize()} '{hostname}' not found.")
         except Exception as e:
             print(f"Unexpected error for host '{hostname}': {str(e)}")
             continue
     print("Tagging operation completed.")
 
-# Example usage: 
-# ftool tag-hosts -i hostnames.txt -t "Critical" -a add
-# ftool tag-hosts -i hostnames.txt -t "Critical" -a remove
+# Example usage:
+# ftool tag-hosts -i hosts.txt -t "Critical" -a add
+# ftool tag-hosts -i hosts.txt -t "Critical" -a remove
+# Input file can contain hostnames, IPv4 addresses, or IPv6 addresses (one per line)
