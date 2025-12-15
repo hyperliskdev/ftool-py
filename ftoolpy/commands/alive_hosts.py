@@ -56,23 +56,21 @@ def check_alive_hosts(args):
     if response["status_code"] == 200 and response["body"]["resources"] and hidden_devices["status_code"] == 200 and hidden_devices["body"]["resources"]:
         
         hidden_host_ids = hidden_devices["body"]["resources"]
-        
-        if not hidden_host_ids:
-            hidden_host_ids = ["00000000-0000-0000-0000-000000000000"]  # Dummy ID to avoid empty list error
-        
-        hidden_device_details = falcon.command("PostDeviceDetailsV2", ids=hidden_host_ids)
-        
-        if hidden_device_details["status_code"] == 200 and hidden_device_details["body"]["resources"]:
-            hidden_details = hidden_device_details["body"]["resources"]
+
+        if len(hidden_host_ids) > 0:
+            hidden_device_details = falcon.command("PostDeviceDetailsV2", ids=hidden_host_ids)
             
-            for hidden_device in hidden_details:
-                hostname = hidden_device.get("hostname", "Unknown")
-                host_id = hidden_device.get("device_id", "Unknown")
-                hidden = "Device is hidden in Falcon Console"
-                hidden_results.append((hostname, host_id, hidden))
+            if hidden_device_details["status_code"] == 200 and hidden_device_details["body"]["resources"]:
+                hidden_details = hidden_device_details["body"]["resources"]
                 
-        else:
-            print(f"Error retrieving hidden device details: {hidden_device_details}")
+                for hidden_device in hidden_details:
+                    hostname = hidden_device.get("hostname", "Unknown")
+                    host_id = hidden_device.get("device_id", "Unknown")
+                    hidden = "Device is hidden in Falcon Console"
+                    hidden_results.append((hostname, host_id, hidden))
+                    
+            else:
+                print(f"Error retrieving hidden device details: {hidden_device_details}")
 
         host_ids = response["body"]["resources"]
 
