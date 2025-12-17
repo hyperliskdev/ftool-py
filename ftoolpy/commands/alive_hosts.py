@@ -45,39 +45,30 @@ def check_alive_hosts(args):
 
 
     results = []
-    hidden_results = []
     ## Use QueryDevicesByFilter to find host_ids based on hostnames
 
     # Map hostnames to IDs and check their online status
-    response = falcon.command("QueryDevicesByFilter", filter=f"hostname:'" + "','".join(hostnames) + "'", limit=5000)
-    hidden_devices = falcon.command("QueryHiddenDevices", filter=f"hostname:'" + "','".join(hostnames) + "'", limit=5000)
+    response = falcon.command("QueryDevicesByFilter", filter=f"hostname:['" + "','".join(hostnames) + "']", limit=5000) # 83567ivn843h398vhg784h935g8wh45 
+    hidden_devices = falcon.command("QueryHiddenDevices", filter=f"hostname:['" + "','".join(hostnames) + "']", limit=5000)
     
     # Check if the response is valid and contains resources
-    if response["status_code"] == 200 and response["body"]["resources"] and hidden_devices["status_code"] == 200:
+    if response["status_code"] == 200 and response["body"]["resources"] and hidden_devices["status_code"] == 200 and response["body"]["resources"]:
         
-        print(f"Found {len(response['body']['resources'])} devices and {len(hidden_devices['body']['resources'])} hidden devices matching the provided hostnames.")
-        
-        if hidden_devices["body"]["resources"] is None:
-            hidden_devices["body"]["resources"] = []
         hidden_host_ids = hidden_devices["body"]["resources"]
-
-        if len(hidden_host_ids) > 0:
-            hidden_device_details = falcon.command("PostDeviceDetailsV2", ids=hidden_host_ids)
-            
-            if hidden_device_details["status_code"] == 200 and hidden_device_details["body"]["resources"]:
-                hidden_details = hidden_device_details["body"]["resources"]
-                
-                for hidden_device in hidden_details:
-                    hostname = hidden_device.get("hostname", "Unknown")
-                    host_id = hidden_device.get("device_id", "Unknown")
-                    hidden = "Device is hidden in Falcon Console"
-                    hidden_results.append((hostname, host_id, hidden))
-                    
-            else:
-                print(f"Error retrieving hidden device details: {hidden_device_details}")
-        else:
-            print("No hidden devices found.")
         
+        hidden_device_details = falcon.command("PostDeviceDetailsV2", ids=hidden_host_ids)
+        
+        if hidden_device_details["status_code"] == 200 and hidden_device_details["body"]["resources"]:
+            hidden_details = hidden_device_details["body"]["resources"]
+            
+            for hidden_device in hidden_details:
+                hostname = hidden_device.get("hostname", "Unknown")
+                host_id = hidden_device.get("device_id", "Unknown")
+                hidden = "Device is hidden in Falcon Console"
+                results.append((hostname, host_id, hidden))
+        else:
+            print(f"Error retrieving hidden device details: {hidden_device_details}")
+
         host_ids = response["body"]["resources"]
 
         device_details = falcon.command("PostDeviceDetailsV2", ids=host_ids)
@@ -101,12 +92,9 @@ def check_alive_hosts(args):
         alive_hostnames = {result[0] for result in results}
         dead_hostnames = set(hostnames) - alive_hostnames
         results = [(hostname, "N/A", "N/A", "N/A") for hostname in dead_hostnames]
-        
 
     for res in results:
         print(f"Hostname: {res[0]}, ID: {res[1]}, Last Seen: {res[2]}, First Seen: {res[3]}")
-    for hidden_res in hidden_results:
-        print(f"Hostname: {hidden_res[0]}, ID: {hidden_res[1]}, Status: {hidden_res[2]}")
         
     
     # Write results to output file if specified
@@ -115,8 +103,6 @@ def check_alive_hosts(args):
             with open(args.output_file, 'w') as f:
                 for hostname, host_id, last_seen, first_seen in results:
                     f.write(f"{hostname},{host_id},{last_seen},{first_seen}\n")
-                for hostname, host_id, hidden in hidden_results:
-                    f.write(f"{hostname},{host_id},{hidden}\n")
             print(f"Results saved to {args.output_file}")
         except Exception as e:
             print(f"Failed to write to output file {args.output_file}: {str(e)}")
