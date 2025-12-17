@@ -53,7 +53,7 @@ def check_alive_hosts(args):
     hidden_devices = falcon.command("QueryHiddenDevices", filter=f"hostname:['" + "','".join(hostnames) + "']", limit=5000)
     
     # Check if the response is valid and contains resources
-    if response["status_code"] == 200 and response["body"]["resources"] and hidden_devices["status_code"] == 200 and hidden_devices["body"]["resources"]:
+    if response["status_code"] == 200 and response["body"]["resources"] and hidden_devices["status_code"] == 200:
         
         hidden_host_ids = hidden_devices["body"]["resources"]
 
@@ -71,7 +71,9 @@ def check_alive_hosts(args):
                     
             else:
                 print(f"Error retrieving hidden device details: {hidden_device_details}")
-
+        else:
+            print("No hidden devices found.")
+        
         host_ids = response["body"]["resources"]
 
         device_details = falcon.command("PostDeviceDetailsV2", ids=host_ids)
