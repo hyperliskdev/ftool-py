@@ -49,11 +49,13 @@ def check_alive_hosts(args):
     ## Use QueryDevicesByFilter to find host_ids based on hostnames
 
     # Map hostnames to IDs and check their online status
-    response = falcon.command("QueryDevicesByFilter", filter=f"hostname:['" + "','".join(hostnames) + "']", limit=5000)
-    hidden_devices = falcon.command("QueryHiddenDevices", filter=f"hostname:['" + "','".join(hostnames) + "']", limit=5000)
+    response = falcon.command("QueryDevicesByFilter", filter=f"hostname:'" + "','".join(hostnames) + "'", limit=5000)
+    hidden_devices = falcon.command("QueryHiddenDevices", filter=f"hostname:'" + "','".join(hostnames) + "'", limit=5000)
     
     # Check if the response is valid and contains resources
     if response["status_code"] == 200 and response["body"]["resources"] and hidden_devices["status_code"] == 200:
+        
+        print(f"Found {len(response['body']['resources'])} devices and {len(hidden_devices['body']['resources'])} hidden devices matching the provided hostnames.")
         
         if hidden_devices["body"]["resources"] is None:
             hidden_devices["body"]["resources"] = []
