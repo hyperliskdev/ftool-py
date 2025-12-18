@@ -48,45 +48,37 @@ def check_alive_hosts(args):
     ## Use QueryDevicesByFilter to find host_ids based on hostnames
 
     # Map hostnames to IDs and check their online status
-    response = falcon.command("QueryDevicesByFilter", filter=f"hostname:['" + "','".join(hostnames) + "']", limit=5000) # 83567ivn843h398vhg784h935g8wh45 
-    hidden_devices = falcon.command("QueryHiddenDevices", filter=f"hostname:['" + "','".join(hostnames) + "']", limit=5000)
     
-    # Check if the response is valid and contains resources
-    if response["status_code"] == 200 and response["body"]["resources"] and hidden_devices["status_code"] == 200 and response["body"]["resources"]:
+    
+    for hostname in hostnames:
         
-        hidden_host_ids = hidden_devices["body"]["resources"]
+        response = falcon.command("QueryDevicesByFilter", filter=f"hostname:'{hostname}'")
         
-        hidden_device_details = falcon.command("PostDeviceDetailsV2", ids=hidden_host_ids)
-        
-        if hidden_device_details["status_code"] == 200 and hidden_device_details["body"]["resources"]:
-            hidden_details = hidden_device_details["body"]["resources"]
-            
-            for hidden_device in hidden_details:
-                hostname = hidden_device.get("hostname", "Unknown")
-                host_id = hidden_device.get("device_id", "Unknown")
-                hidden = "Device is hidden in Falcon Console"
-                results.append((hostname, host_id, hidden))
-        else:
-            print(f"Error retrieving hidden device details: {hidden_device_details}")
-
-        host_ids = response["body"]["resources"]
-
-        device_details = falcon.command("PostDeviceDetailsV2", ids=host_ids)
-        # Check if the device details response is valid
-        if device_details["status_code"] == 200 and device_details["body"]["resources"]:
-
-            device_details = device_details["body"]["resources"]
-
-            # Check each device details and determine online status
-            for device in device_details:
-                hostname = device.get("hostname", "Unknown")
-                host_id = device.get("device_id", "Unknown")
-                last_seen = device.get("last_seen", None)
-                first_seen = device.get("first_seen", None)
+        if response["status_code"] == 200 and response["body"]["resources"]:
+            host_id = response["body"]["resources"][0]
+            device_details = falcon.command("GetDeviceDetails", ids=[host_id])
+            if device_details["status_code"] == 200 and device_details["body"]["resources"]:
+                device_info = device_details["body"]["resources"][0]
+                last_seen = device_info.get("last_seen", None)
+                first_seen = device_info.get("first_seen", None)
                 results.append((hostname, host_id, last_seen, first_seen))
+            else:
+                print(f"Error retrieving device details for '{hostname}': {device_details}")
         else:
-            print(f"Error retrieving device details: {response}")
-            
+            print(f"Hostname '{hostname}' not found in Falcon Console, checking if hidden...")
+            hidden_devices = falcon.command("QueryHiddenDevices", filter=f"hostname:'{hostname}'", limit=5000)
+            if hidden_devices["status_code"] == 200 and hidden_devices["body"]["resources"]:
+                hidden_host_id = hidden_devices["body"]["resources"][0]
+                hidden_device_details = falcon.command("GetDeviceDetails", ids=[hidden_host_id])
+                if hidden_device_details["status_code"] == 200 and hidden_device_details["body"]["resources"]:
+                    hidden_info = hidden_device_details["body"]["resources"][0]
+                    results.append((hostname, hidden_host_id, "Hidden Device", "Hidden Device"))
+                else:
+                    print(f"Error retrieving hidden device details for '{hostname}': {hidden_device_details}")
+            else:
+                print(f"Hostname '{hostname}' not found as hidden device either.")
+                results.append((hostname, "N/A", "N/A", "N/A"))
+   
     #Filter for hosts that aren't in results
     if args.dead:
         alive_hostnames = {result[0] for result in results}
